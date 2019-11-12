@@ -2,6 +2,7 @@ pub use calamine::{
     open_workbook, DataType, Error as CalamineError, Range, RangeDeserializerBuilder, Reader, Xls,
 };
 use std::path::Path;
+use crate::models::XLSEntry;
 
 fn document_range(path: &Path) -> Range<DataType> {
     let mut excel: Xls<_> = open_workbook(path).unwrap();
@@ -11,25 +12,25 @@ fn document_range(path: &Path) -> Range<DataType> {
     range
 }
 
-fn get_rows_raw(path: &Path) -> Result<Vec<crate::models::IntegraExcelRow>, CalamineError> {
+fn get_rows_raw<T>(path: &Path) -> Option<Vec<<T as XLSEntry>::Raw>>
+    where T: crate::models::common::XLSEntry {
     let range = document_range(path);
-    let iter = RangeDeserializerBuilder::new().from_range(&range)?;
-    let rows: Vec<crate::models::IntegraExcelRow> = iter
-        .map(|e| {
-            e.expect(
-                "Zmieniła się struktura dokumentu programu Integra. \
-                 Skontaktuj się z pomocą techniczną programu Alternator.",
-            )
-        })
-        .collect();
-    Ok(rows)
+    let iter = RangeDeserializerBuilder::new().from_range(&range).unwrap();
+    let mut rows = vec![];
+    for row in iter {
+        match row {
+            Ok(r) => rows.push(r),
+            _ => return None,
+        }
+    }
+    Some(rows)
 }
-pub type EntriesIterator = Box<dyn Iterator<Item=crate::models::IntegraEntry>>;
-pub fn get_rows(path: &Path) -> Result<
-    EntriesIterator,
-    CalamineError,
-> {
-    Ok(box get_rows_raw(path)?
-        .into_iter()
-        .map(|e| e.into()))
+
+//pub type EntriesIterator = Box<dyn Iterator<Item=crate::models::OrderEntry>>;
+pub fn get_rows<T>(path: &Path) -> Option<Vec<T>>
+    where T: crate::models::common::XLSEntry {
+    match get_rows_raw::<T>(path) {
+        Some(r) => Some(r.into_iter().map(|e| e.into()).collect()),
+        _ => None,
+    }
 }

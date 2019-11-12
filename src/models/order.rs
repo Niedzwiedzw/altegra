@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
+use crate::models::XLSEntry;
 
-pub type IntegraExcelRow = (
+pub type OrderIntegraExcelRow = (
     String,
     String,
     String,
@@ -19,7 +20,7 @@ pub type IntegraExcelRow = (
 );
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct IntegraEntry {
+pub struct OrderEntry {
     status: String,
     typ: String,
     numer: String,
@@ -37,14 +38,18 @@ pub struct IntegraEntry {
     a: String,
 }
 
-impl IntegraEntry {
+impl OrderEntry {
     pub fn to_json(&self) -> Result<String, serde_json::error::Error> {
         serde_json::to_string(self)
     }
 }
 
-impl From<IntegraExcelRow> for IntegraEntry {
-    fn from(entry: IntegraExcelRow) -> Self {
+impl XLSEntry for OrderEntry {
+    type Raw = OrderIntegraExcelRow;
+}
+
+impl From<<OrderEntry as XLSEntry>::Raw> for OrderEntry {
+    fn from(entry: OrderIntegraExcelRow) -> Self {
         let (
             status,
             typ,
@@ -62,7 +67,8 @@ impl From<IntegraExcelRow> for IntegraEntry {
             rm,
             a,
         ) = entry;
-        return IntegraEntry {
+
+        return Self {
             status,
             typ,
             numer,
