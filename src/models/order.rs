@@ -17,6 +17,7 @@ pub type OrderIntegraExcelRow = (
     String,
     String,
     String,
+    String,
 );
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,6 +37,7 @@ pub struct OrderEntry {
     rk: String,
     rm: String,
     a: String,
+    serwis: String,
 }
 
 impl OrderEntry {
@@ -48,7 +50,7 @@ impl XLSEntry for OrderEntry {
     type Raw = OrderIntegraExcelRow;
 }
 
-impl From<<OrderEntry as XLSEntry>::Raw> for OrderEntry {
+impl From<<OrderEntry as XLSEntry>::Raw> for OrderEntry { // TODO: order entry is wrong
     fn from(entry: OrderIntegraExcelRow) -> Self {
         let (
             status,
@@ -59,13 +61,14 @@ impl From<<OrderEntry as XLSEntry>::Raw> for OrderEntry {
             marka,
             model,
             wersja,
-            wartosc_brutto,
-            serwisant,
             kontrahent,
+            serwisant,
             telefon,
+            wartosc_brutto,
             rk,
             rm,
             a,
+            serwis,
         ) = entry;
 
         return Self {
@@ -84,6 +87,7 @@ impl From<<OrderEntry as XLSEntry>::Raw> for OrderEntry {
             rk,
             rm,
             a,
+            serwis,
         };
     }
 }
