@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use crate::models::XLSEntry;
+use regex::Regex;
 
 pub type VehicleIntegraExcelRow = (
     String,
@@ -20,20 +21,20 @@ pub type VehicleIntegraExcelRow = (
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VehicleEntry {
-    nr_rejestracyjny: String,
-    marka: String,
-    model: String,
-    wersja: String,
-    silnik: String,
-    rok_produkcji: String,
-    nr_nadwozia: String,
-    kolor: String,
-    uzytkownik_pojazdu: String,
-    miejscowosc: String,
-    telefon: String,
-    miejscowosc_wlasciciela: String,
-    komunikat: String,
-    uwagi: String,
+    pub numer_rejestracyjny: String,
+    pub marka: String,
+    pub model: String,
+    pub wersja: String,
+    pub silnik: String,
+    pub rok_produkcji: String,
+    pub nr_nadwozia: String,
+    pub kolor: String,
+    pub uzytkownik_pojazdu: String,
+    pub miejscowosc: String,
+    pub telefon: String,
+    pub miejscowosc_wlasciciela: String,
+    pub komunikat: String,
+    pub uwagi: String,
 }
 
 impl VehicleEntry {
@@ -44,6 +45,12 @@ impl VehicleEntry {
 
 impl XLSEntry for VehicleEntry {
     type Raw = VehicleIntegraExcelRow;
+    fn validate(&self) -> bool {
+        lazy_static! {
+            static ref CONTAINS_NUMBER: Regex = Regex::new(r".*?\d.*?").unwrap();
+        }
+        CONTAINS_NUMBER.is_match(&self.rok_produkcji)
+    }
 }
 
 impl From<VehicleIntegraExcelRow> for VehicleEntry {
@@ -66,7 +73,7 @@ impl From<VehicleIntegraExcelRow> for VehicleEntry {
         ) = entry;
 
         return VehicleEntry {
-            nr_rejestracyjny,
+            numer_rejestracyjny: nr_rejestracyjny,
             marka,
             model,
             wersja,

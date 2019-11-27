@@ -17,7 +17,7 @@ fn locate_dump_files() -> Box<dyn Iterator<Item=DirEntry>> {
 pub fn integra_files<T>() -> Box<dyn Iterator<Item=Vec<T>>>
     where T: crate::models::common::XLSEntry {
     let mut xls_files = locate_dump_files();
-    let _integra_files = xls_files
+    let mut _integra_files = xls_files
         .filter_map(|entry| crate::parser::get_rows::<T>(entry.path()));
     box _integra_files
 }

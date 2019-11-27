@@ -30,7 +30,16 @@ fn get_rows_raw<T>(path: &Path) -> Option<Vec<<T as XLSEntry>::Raw>>
 pub fn get_rows<T>(path: &Path) -> Option<Vec<T>>
     where T: crate::models::common::XLSEntry {
     match get_rows_raw::<T>(path) {
-        Some(r) => Some(r.into_iter().map(|e| e.into()).collect()),
+        Some(r) => {
+            let rows: Vec<T> = r.into_iter()
+                .map(|e| e.into())
+                .filter(|e| e.validate())
+                .collect();
+            if rows.is_empty() {
+                return None;
+            }
+            return Some(rows);
+        },
         _ => None,
     }
 }

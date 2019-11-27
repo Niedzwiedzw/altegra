@@ -22,22 +22,22 @@ pub type OrderIntegraExcelRow = (
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct OrderEntry {
-    status: String,
-    typ: String,
-    numer: String,
-    data_zgloszenia: String,
-    numer_rejestracyjny: String,
-    marka: String,
-    model: String,
-    wersja: String,
-    wartosc_brutto: String,
-    serwisant: String,
-    kontrahent: String,
-    telefon: String,
-    rk: String,
-    rm: String,
-    a: String,
-    serwis: String,
+    pub status: String,
+    pub typ: String,
+    pub numer: String,
+    pub data_zgloszenia: String,
+    pub numer_rejestracyjny: String,
+    pub marka: String,
+    pub model: String,
+    pub wersja: String,
+    pub wartosc_brutto: String,
+    pub serwisant: String,
+    pub kontrahent: String,
+    pub telefon: String,
+    pub rk: String,
+    pub rm: String,
+    pub a: String,
+    pub serwis: String,
 }
 
 impl OrderEntry {
@@ -48,6 +48,9 @@ impl OrderEntry {
 
 impl XLSEntry for OrderEntry {
     type Raw = OrderIntegraExcelRow;
+    fn validate(&self) -> bool {
+        true
+    }
 }
 
 impl From<<OrderEntry as XLSEntry>::Raw> for OrderEntry { // TODO: order entry is wrong
