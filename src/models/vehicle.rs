@@ -37,12 +37,6 @@ pub struct VehicleEntry {
     pub uwagi: String,
 }
 
-impl VehicleEntry {
-    pub fn to_json(&self) -> Result<String, serde_json::error::Error> {
-        serde_json::to_string(self)
-    }
-}
-
 impl XLSEntry for VehicleEntry {
     type Raw = VehicleIntegraExcelRow;
     fn validate(&self) -> bool {

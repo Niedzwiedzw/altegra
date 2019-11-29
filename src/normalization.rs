@@ -1,5 +1,4 @@
 use chrono::prelude::*;
-use chrono::format::strftime::StrftimeItems;
 
 pub fn remove_whitespace(input: String) -> String {
     input.split_whitespace().collect::<Vec<_>>().join("")
@@ -14,7 +13,7 @@ pub fn normalize_phone_number(phone_number: String) -> String {
 }
 
 pub fn normalize_date(date: String) -> Result<String, ()> {
-    let mut date = remove_whitespace(date);
+    let date = remove_whitespace(date);
     match date.len() {
         4 => Ok(
             NaiveDate::from_yo(

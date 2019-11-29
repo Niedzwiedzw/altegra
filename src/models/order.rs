@@ -40,12 +40,6 @@ pub struct OrderEntry {
     pub serwis: String,
 }
 
-impl OrderEntry {
-    pub fn to_json(&self) -> Result<String, serde_json::error::Error> {
-        serde_json::to_string(self)
-    }
-}
-
 impl XLSEntry for OrderEntry {
     type Raw = OrderIntegraExcelRow;
     fn validate(&self) -> bool {
