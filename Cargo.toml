@@ -19,3 +19,4 @@ reqwest = { version = "0.10.0-alpha.2", features = ["blocking"] }
 chrono = "0.4.10"
 anyhow = "1.0.23"
 md5 = "0.7.0"
+snafu = "0.6.0"

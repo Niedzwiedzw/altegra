@@ -13,7 +13,6 @@ use crate::locator::integra_files;
 use crate::models::alternator::AlternatorRequest;
 use reqwest::{
     blocking::{Client, RequestBuilder},
-    Result as RequestResult,
     header,
     StatusCode,
 };
@@ -24,9 +23,10 @@ use std::collections::HashSet;
 use std::thread::sleep;
 use std::time::Duration;
 use std::io::Write;
+use snafu::{ResultExt, Snafu};
 
-const DEBUG_BACKEND_URL: &'static str = "http://aplikacja-alternator.pl/api/orders/import-integra-car/";
-const BACKEND_URL: &'static str = "http://127.0.0.1:8000/api/orders/import-integra-car/";
+const BACKEND_URL: &'static str = "http://aplikacja-alternator.pl/api/orders/import-integra-car/";
+const DEBUG_BACKEND_URL: &'static str = "http://127.0.0.1:8000/api/orders/import-integra-car/";
 
 pub fn is_debug() -> bool {
     args().last().unwrap() == "--debug"
@@ -39,31 +39,52 @@ pub fn backend_url() -> &'static str {
     }
 }
 
-fn send_order(order_json: String) -> Result<()> {
+#[derive(Snafu, Debug)]
+enum RequestError {
+    #[snafu(display("Hasło logowania wygasło lub jest niepoprawne."))]
+    WrongCredentials,
+    #[snafu(display("Brak hasła logowania w login.txt"))]
+    CredentialsNotPresent,
+    #[snafu(display("Źle sformatowany wpis zlecenia: {}", message))]
+    ValidationError { message: String },
+}
+
+type RequestResult<T, E = RequestError> = std::result::Result<T, E>;
+
+fn send_order(order_json: String) -> RequestResult<()> {
     let client: Client = Client::new();
     let mut headers = header::HeaderMap::new();
     headers.insert(
         header::CONTENT_TYPE,
         header::HeaderValue::from_static("application/json"),
     );
-
+    let authorization = format!("Bearer {}", get_token());
     headers.insert(
         header::AUTHORIZATION,
-        header::HeaderValue::from_str(get_token().as_str())
+        header::HeaderValue::from_str(authorization.as_str())
             .expect("Nie udało się odczytać hasła dostępu."),
     );
+
+    if is_debug() {
+        println!("[DEBUG] send_order() -> {}", backend_url());
+    }
 
     let request: RequestBuilder = client
         .post(backend_url())
         .body(order_json)
         .headers(headers);
 
-    let response = request.send()?;
+    let response = request.send().expect("Błąd sieciowy, brak połączenia z Internetem?");
     let status = response.status();
+    if status == 401 {
+        return Err(RequestError::WrongCredentials)
+    }
     if status.is_success() {
         return Ok(());
     } else {
-        return Err(anyhow::Error::msg(format!("[{}] {}", status, response.text()?)));
+        return Err(
+            RequestError::ValidationError {message: format!("[{}] {}", status, response.text().unwrap())},
+        );
     }
 }
 
@@ -88,6 +109,10 @@ fn main() -> Result<(), crate::parser::CalamineError> {
             }
             match send_order(json) {
                 Ok(_) => println!("[OK] {}", order.vehicle.plates_number),
+                Err(RequestError::WrongCredentials) => {
+                    println!("Hasło w login.txt wygasło lub jest niepoprawne.");
+                    break;
+                },
                 Err(e) => println!(
                     "[BŁĄD!] zlecenie: {:#?}: {}",
                     order.vehicle.plates_number,
