@@ -8,6 +8,7 @@ mod models;
 mod parser;
 mod normalization;
 mod cache;
+mod test_data;
 
 use crate::locator::integra_files;
 use crate::models::alternator::AlternatorRequest;
@@ -29,7 +30,11 @@ const BACKEND_URL: &'static str = "http://aplikacja-alternator.pl/api/orders/imp
 const DEBUG_BACKEND_URL: &'static str = "http://127.0.0.1:8000/api/orders/import-integra-car/";
 
 pub fn is_debug() -> bool {
-    args().last().unwrap() == "--debug"
+    args().last().expect("Brak ostatniego argumentu") == "--debug"
+}
+
+pub fn is_test() -> bool {
+    args().last().expect("Brak ostatniego argumentu") == "--test"
 }
 
 pub fn backend_url() -> &'static str {
@@ -83,26 +88,28 @@ fn send_order(order_json: String) -> RequestResult<()> {
         return Ok(());
     } else {
         return Err(
-            RequestError::ValidationError {message: format!("[{}] {}", status, response.text().unwrap())},
+            RequestError::ValidationError {message: format!("[{}] {}", status, response.text().expect("Nie udało się odczytać odpowiedzi serwera"))},
         );
     }
 }
 
 fn main() -> Result<(), crate::parser::CalamineError> {
     println!(">><><< Altegra >><><<");
+    if is_test() {
+        test_data::test_data();
+        return Ok(())
+    }
     recreate_altegra_path().expect("nie udało sie stworzyć struktury katalogów");
     loop {
-        let vehicles = integra_files().flatten().collect::<Vec<_>>();
-        let valid_orders: Vec<AlternatorRequest> = integra_files::<models::OrderEntry>()
-            .take(1)
+        let valid_orders: Vec<AlternatorRequest> = integra_files()
             .flatten()
-            .filter_map(|entry| AlternatorRequest::from(&entry, &vehicles))
+            .filter_map(|entry| AlternatorRequest::from(&entry))
             .collect();
 
         let cache: HashSet<_> = read_cache().into_iter().collect();
 
         for order in valid_orders.iter() {
-            let json = serde_json::to_string(order).unwrap();
+            let json = serde_json::to_string(order).expect("Nie udało się zserializować pliku integry");
             let checksum = format!("{:x}", md5::compute(json.clone()));
             if cache.contains(&checksum) {
                 continue;
@@ -122,7 +129,9 @@ fn main() -> Result<(), crate::parser::CalamineError> {
             write_cache(checksum);
         }
         print!(".");
-        std::io::stdout().flush().unwrap();
+        match std::io::stdout().flush() {
+            _ => {},
+        };
         sleep(Duration::from_secs(5));
     }
 

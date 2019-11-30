@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::models::{OrderEntry, VehicleEntry};
+use crate::models::{OrderEntry};
 use crate::normalization::{normalize_phone_number, normalize_date};
 
 // expected example data data:
@@ -107,7 +107,7 @@ pub struct AlternatorRequest {
 }
 
 impl AlternatorRequest {
-    pub fn from(order: &OrderEntry, vehicles: &Vec<VehicleEntry>) -> Option<Self> {
+    pub fn from(order: &OrderEntry) -> Option<Self> {
         let full_name = order.kontrahent.clone();
         let phone_number = order.telefon.clone();
 
@@ -118,14 +118,9 @@ impl AlternatorRequest {
         let plates_number = order.numer_rejestracyjny.clone();
         let brand = order.marka.clone();
         let model = order.model.clone();
-
-        let vehicle_entry = vehicles
-            .iter()
-            .find(|&v| v.numer_rejestracyjny == plates_number)?;
-
-        let engine_code = vehicle_entry.nr_nadwozia.clone();
-        let manufacture_date = vehicle_entry.rok_produkcji.clone();
-        let color = vehicle_entry.kolor.clone();
+        let engine_code = order.numer_nadwozia.clone();
+        let manufacture_date = order.rok_produkcji.clone();
+        let color = order.kolor.clone();
 
         let vehicle = AlternatorVehicle::build(
             engine,
