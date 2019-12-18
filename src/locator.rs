@@ -1,10 +1,13 @@
 use dirs::desktop_dir;
 use walkdir::{WalkDir, DirEntry};
 use crate::models::{OrderIntegraExcelRow, OrderEntry};
+use crate::is_debug;
 
 fn locate_dump_files() -> Box<dyn Iterator<Item=DirEntry>> {
     let desktop = desktop_dir().expect("Nie udało się zlokalizować ścieżki do pulpitu.");
-    println!("szukam w: {:?}", desktop);
+    if is_debug() {
+        println!("szukam w: {:?}", desktop);
+    }
     let walkdir = WalkDir::new(desktop);
     let filtered = walkdir
         .into_iter()
@@ -23,7 +26,9 @@ fn locate_dump_files() -> Box<dyn Iterator<Item=DirEntry>> {
                 )
         }
     );
-    println!("znaleziono pliki: {:?}", sorted);
+    if is_debug() {
+        println!("znaleziono pliki: {:?}", sorted);
+    }
     box sorted.into_iter()
 }
 

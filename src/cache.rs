@@ -36,7 +36,7 @@ pub fn get_token() -> String {
         .read_to_string(&mut token)
         .expect("Nie udało się otworzyć pliku z hasłem dostępu.");
     let token= remove_whitespace(token);
-    if remove_whitespace(token.clone()).is_empty() {
+    if token.clone().is_empty() {
         panic!("Nie znaleziono hasła dostępu w login.txt");
     }
     token

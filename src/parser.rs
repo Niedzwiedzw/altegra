@@ -38,8 +38,8 @@ pub fn get_rows(path: &Path) -> Option<Vec<OrderEntry>> {
     match get_rows_raw(path) {
         Some(r) => {
             let rows: Vec<OrderEntry> = r.into_iter()
-                .map(|e| e.into())
-                .filter(|e| e.validate())
+                .map(|e| OrderEntry::from(e))
+                .filter(|e: _| e.validate())
                 .collect();
             if rows.is_empty() {
                 return None;

@@ -26,7 +26,7 @@ use std::time::Duration;
 use std::io::Write;
 use snafu::{ResultExt, Snafu};
 
-const BACKEND_URL: &'static str = "http://aplikacja-alternator.pl/api/orders/import-integra-car/";
+const BACKEND_URL: &'static str = "https://aplikacja-alternator.pl/api/orders/import-integra-car/";
 const DEBUG_BACKEND_URL: &'static str = "http://127.0.0.1:8000/api/orders/import-integra-car/";
 
 pub fn is_debug() -> bool {
@@ -63,7 +63,7 @@ fn send_order(order_json: String) -> RequestResult<()> {
         header::CONTENT_TYPE,
         header::HeaderValue::from_static("application/json"),
     );
-    let authorization = format!("Bearer {}", get_token());
+    let authorization = format!("Token {}", get_token());
     headers.insert(
         header::AUTHORIZATION,
         header::HeaderValue::from_str(authorization.as_str())
@@ -71,9 +71,9 @@ fn send_order(order_json: String) -> RequestResult<()> {
     );
 
     if is_debug() {
-        println!("[DEBUG] send_order() -> {}", backend_url());
+        println!("{:?}", headers);
+        println!("send_order() => {}", backend_url());
     }
-
     let request: RequestBuilder = client
         .post(backend_url())
         .body(order_json)
@@ -81,7 +81,8 @@ fn send_order(order_json: String) -> RequestResult<()> {
 
     let response = request.send().expect("Błąd sieciowy, brak połączenia z Internetem?");
     let status = response.status();
-    if status == 401 {
+    if status == 401 || status == 403 {
+        println!("{}", response.text().unwrap());
         return Err(RequestError::WrongCredentials)
     }
     if status.is_success() {
